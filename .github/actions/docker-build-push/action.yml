@@ -11,7 +11,7 @@ inputs:
   aws-secret-access-key:
     description: "AWS Secret Access Key"
     required: true
-  aws-secret-access-token:
+  aws-session-token:
     description: "AWS Session token"
     required: true
   ecr-repo:
@@ -36,7 +36,7 @@ runs:
         aws-region: ${{ inputs.aws-region }}
         aws-access-key-id: ${{ inputs.aws-access-key-id }}
         aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
-        aws-secret-access-token: ${{ inputs.aws-session-token }}
+        aws-session-token: ${{ inputs.aws-session-token }}
 
     - name: Login to Amazon ECR
       id: login-ecr

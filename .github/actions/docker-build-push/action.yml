@@ -30,9 +30,9 @@ runs:
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
-        aws-region: us-east-1
-        aws-access-key-id: ASIAXEFPMSBJDNGHIF4K
-        aws-secret-access-key: 7MA5r3/Eul7zZ/NAwSIuUS3Jw0Wd2T01FLTCDtGM
+        aws-region: ${{ inputs.aws-region }}
+        aws-access-key-id: ${{ inputs.aws-access-key-id }}
+        aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
 
     - name: Login to Amazon ECR
       id: login-ecr

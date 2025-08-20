@@ -22,7 +22,7 @@ inputs:
     required: true
   dockerfile:
     description: "Path to the Dockerfile"
-    default: "./Dockerfile"
+    default: "././worflows/docker-build.yml"
   context:
     description: "Build context path"
     default: "."

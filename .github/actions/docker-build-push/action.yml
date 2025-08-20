@@ -5,6 +5,15 @@ inputs:
   aws-region:
     description: "AWS region where ECR repository exists"
     required: true
+  aws-access-key-id:
+    description: "AWS Access Key ID"
+    required: true
+  aws-secret-access-key:
+    description: "AWS Secret Access Key"
+    required: true
+  aws-secret-access-token:
+    description: "AWS Session token"
+    required: true
   ecr-repo:
     description: "Name of the ECR repository"
     required: true
@@ -24,10 +33,10 @@ runs:
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+        aws-region: ${{ inputs.aws-region }}
+        aws-access-key-id: ${{ inputs.aws-access-key-id }}
+        aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
+        aws-secret-access-token: ${{ inputs.aws-session-token }}
 
     - name: Login to Amazon ECR
       id: login-ecr

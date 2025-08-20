@@ -14,7 +14,10 @@ jobs:
         uses: ./.github/actions/docker-build-push
         with:
           aws-region: us-east-1
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           ecr-repo: my-app-repo
           image-tag: ${{ github.sha }}
           dockerfile: ./Dockerfile
           context: .
+

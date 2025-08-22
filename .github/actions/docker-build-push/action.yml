@@ -26,6 +26,15 @@ inputs:
   context:
     description: "Build context path"
     default: "."
+  server-ip:
+    description: "EC2 server IP"
+    required: true
+  ssh-user:
+    description: "SSH username"
+    required: true
+  ssh-key:
+    description: "Private SSH key"
+    required: true
 
 runs:
   using: "composite"
@@ -54,16 +63,15 @@ runs:
     - name: SSH into EC2 and Deploy Container
       uses: appleboy/ssh-action@v1.0.3
       with:
-        host: ${{ secrets.SERVER_IP }}
-        username: ${{ secrets.SSH_USER }}
-        key: ${{ secrets.SSH_KEY }}
+        host: ${{ inputs.server-ip }}
+        username: ${{ inputs.ssh-user }}
+        key: ${{ inputs.ssh-key }}
         port: 22
         script: |
           echo "Deploying Docker container from ECR..."
 
-          # Install AWS CLI if missing (for Ubuntu/Debian)
-          if ! command -v aws &> /dev/null
-          then
+          # Install AWS CLI if missing
+          if ! command -v aws &> /dev/null; then
             sudo apt-get update -y
             sudo apt-get install -y awscli
           fi
@@ -87,5 +95,4 @@ runs:
           sudo docker run -d --name my-app -p 80:8000 $IMAGE_URI
 
           echo "Deployment finished!"
-
 

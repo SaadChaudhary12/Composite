@@ -54,6 +54,7 @@ runs:
     # Build, Tag & Push Docker image
     - name: Build, Tag, and Push Docker Image
       id: build-image
+      shell: bash
       run: |
         IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/${{ inputs.ecr-repo }}:${{ inputs.image-tag }}
         echo "Building Docker image: $IMAGE_URI"

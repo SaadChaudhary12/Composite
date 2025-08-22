@@ -13,13 +13,15 @@ inputs:
   aws-secret-access-key:
     description: AWS Secret Access Key
     required: true
+  aws-session-token:
+    description: AWS Session Token
+    required: true
   ecr-repo:
     description: ECR repository name
     required: true
   image-tag:
     description: Docker image tag
     required: true
-
   server-ip:
     description: EC2 public IP
     required: true
@@ -44,6 +46,7 @@ runs:
 
         aws-access-key-id: ${{ inputs.aws-access-key-id }}
         aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
+        aws-session-token: ${{ inputs.aws-session-token }}
         aws-region: ${{ inputs.aws-region }}
 
     # Login to Amazon ECR

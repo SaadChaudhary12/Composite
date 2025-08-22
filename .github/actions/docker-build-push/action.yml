@@ -1,5 +1,73 @@
-name: "Build and Push Docker Image to ECR"
-description: "Composite action to build and push a Docker image to AWS ECR"
+# name: "Build and Push Docker Image to ECR"
+# description: "Composite action to build and push a Docker image to AWS ECR"
+
+# inputs:
+#   aws-region:
+#     description: "AWS region where ECR repository exists"
+#     required: true
+#   aws-access-key-id:
+#     description: "AWS Access Key ID"
+#     required: true
+#   aws-secret-access-key:
+#     description: "AWS Secret Access Key"
+#     required: true
+#   aws-session-token:
+#     description: "AWS Session token"
+#     required: true
+#   ecr-repo:
+#     description: "Name of the ECR repository"
+#     required: true
+#   image-tag:
+#     description: "Tag for the Docker image"
+#     required: true
+#   dockerfile:
+#     description: "Path to the Dockerfile"
+#     default: "./././Dockerfile"
+#   context:
+#     description: "Build context path"
+#     default: "."
+
+# runs:
+#   using: "composite"
+#   steps:
+#     - name: Configure AWS Credentials
+#       uses: aws-actions/configure-aws-credentials@v4
+#       with:
+#         aws-region: ${{ inputs.aws-region }}
+#         aws-access-key-id: ${{ inputs.aws-access-key-id }}
+#         aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
+#         aws-session-token: ${{ inputs.aws-session-token }}
+
+#     - name: Login to Amazon ECR
+#       id: login-ecr
+#       uses: aws-actions/amazon-ecr-login@v2
+
+#     - name: Build, Tag, and Push Docker image
+#       run: |
+#         IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/${{ inputs.ecr-repo }}:${{ inputs.image-tag }}
+#         echo "Building image: $IMAGE_URI"
+#         docker build -t $IMAGE_URI -f ${{ inputs.dockerfile }} ${{ inputs.context }}
+#         docker push $IMAGE_URI
+#         echo "image=$IMAGE_URI" >> $GITHUB_OUTPUT
+#       shell: bash
+
+#     - name: SSH into EC2
+#         uses: appleboy/ssh-action@v1.0.3
+#         with:
+#           host: ${{ secrets.SERVER_IP }}
+#           username: ${{ secrets.SSH_USER }}
+#           key: ${{ secrets.SSH_KEY }}
+#           port: 22
+#           script: |
+#             echo "Connect To Remote Server"
+#             echo "Hello From Github Actions" > /tmp/github.txt
+#             sudo bash -c '
+#             apt update && apt-upgrade
+#             apt install mysql-server -y
+
+
+name: "Build, Push, and Deploy Docker Image to ECR"
+description: "Composite action to build, push a Docker image to AWS ECR and deploy to EC2"
 
 inputs:
   aws-region:
@@ -22,7 +90,7 @@ inputs:
     required: true
   dockerfile:
     description: "Path to the Dockerfile"
-    default: "./././Dockerfile"
+    default: "./Dockerfile"
   context:
     description: "Build context path"
     default: "."
@@ -50,3 +118,40 @@ runs:
         docker push $IMAGE_URI
         echo "image=$IMAGE_URI" >> $GITHUB_OUTPUT
       shell: bash
+
+    - name: SSH into EC2 and Deploy Container
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: ${{ secrets.SSH_USER }}
+        key: ${{ secrets.SSH_KEY }}
+        port: 22
+        script: |
+          echo "Deploying Docker container from ECR..."
+
+          # Install AWS CLI if missing (for Ubuntu/Debian)
+          if ! command -v aws &> /dev/null
+          then
+            sudo apt-get update -y
+            sudo apt-get install -y awscli
+          fi
+
+          # Authenticate EC2 with ECR
+          aws ecr get-login-password --region ${{ inputs.aws-region }} | sudo docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
+
+          # Pull latest image
+          IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/${{ inputs.ecr-repo }}:${{ inputs.image-tag }}
+          echo "Pulling image: $IMAGE_URI"
+          sudo docker pull $IMAGE_URI
+
+          # Stop & remove old container if running
+          if [ "$(sudo docker ps -aq -f name=my-app)" ]; then
+            echo "Stopping old container..."
+            sudo docker rm -f my-app
+          fi
+
+          # Run new container (map port 80 → 8000 inside container)
+          echo "Starting new container..."
+          sudo docker run -d --name my-app -p 80:8000 $IMAGE_URI
+
+          echo "Deployment finished!"

@@ -87,3 +87,5 @@ runs:
           sudo docker run -d --name my-app -p 80:8000 $IMAGE_URI
 
           echo "Deployment finished!"
+
+
